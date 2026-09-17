@@ -105,14 +105,12 @@ static bool8 EscalatorWarpIn_End(struct Task *);
 static void Task_UseWaterfall(u8);
 static bool8 WaterfallFieldEffect_Init(struct Task *, struct ObjectEvent *);
 static bool8 WaterfallFieldEffect_ShowMon(struct Task *, struct ObjectEvent *);
-static bool8 WaterfallFieldEffect_WaitForShowMon(struct Task *, struct ObjectEvent *);
 static bool8 WaterfallFieldEffect_RideUp(struct Task *, struct ObjectEvent *);
 static bool8 WaterfallFieldEffect_ContinueRideOrEnd(struct Task *, struct ObjectEvent *);
 
 static void Task_UseDive(u8);
 static bool8 DiveFieldEffect_Init(struct Task *);
 static bool8 DiveFieldEffect_ShowMon(struct Task *);
-static bool8 DiveFieldEffect_TryWarp(struct Task *);
 
 static void Task_LavaridgeGymB1FWarp(u8);
 static bool8 LavaridgeGymB1FWarpEffect_Init(struct Task *, struct ObjectEvent *, struct Sprite *);
@@ -190,7 +188,6 @@ static void Task_SurfFieldEffect(u8);
 static void SurfFieldEffect_Init(struct Task *);
 static void SurfFieldEffect_FieldMovePose(struct Task *);
 static void SurfFieldEffect_ShowMon(struct Task *);
-static void SurfFieldEffect_JumpOnSurfBlob(struct Task *);
 static void SurfFieldEffect_End(struct Task *);
 
 static void SpriteCB_NPCFlyOut(struct Sprite *);
@@ -198,7 +195,6 @@ static void SpriteCB_NPCFlyOut(struct Sprite *);
 static void Task_FlyOut(u8);
 static void FlyOutFieldEffect_FieldMovePose(struct Task *);
 static void FlyOutFieldEffect_ShowMon(struct Task *);
-static void FlyOutFieldEffect_BirdLeaveBall(struct Task *);
 static void FlyOutFieldEffect_WaitBirdLeave(struct Task *);
 static void FlyOutFieldEffect_BirdSwoopDown(struct Task *);
 static void FlyOutFieldEffect_JumpOnBird(struct Task *);
@@ -644,7 +640,6 @@ static bool8 (*const sWaterfallFieldEffectFuncs[])(struct Task *, struct ObjectE
 {
     WaterfallFieldEffect_Init,
     WaterfallFieldEffect_ShowMon,
-    WaterfallFieldEffect_WaitForShowMon,
     WaterfallFieldEffect_RideUp,
     WaterfallFieldEffect_ContinueRideOrEnd,
 };
@@ -653,7 +648,6 @@ static bool8 (*const sDiveFieldEffectFuncs[])(struct Task *) =
 {
     DiveFieldEffect_Init,
     DiveFieldEffect_ShowMon,
-    DiveFieldEffect_TryWarp,
 };
 
 static bool8 (*const sLavaridgeGymB1FWarpEffectFuncs[])(struct Task *, struct ObjectEvent *, struct Sprite *) =
@@ -1853,21 +1847,10 @@ static bool8 WaterfallFieldEffect_ShowMon(struct Task *task, struct ObjectEvent 
     if (!ObjectEventIsMovementOverridden(objectEvent))
     {
         ObjectEventClearHeldMovementIfFinished(objectEvent);
-        gFieldEffectArguments[0] = task->tMonId;
-        FieldEffectStart(FLDEFF_FIELD_MOVE_SHOW_MON_INIT);
         task->tState++;
+        return TRUE;
     }
     return FALSE;
-}
-
-static bool8 WaterfallFieldEffect_WaitForShowMon(struct Task *task, struct ObjectEvent *objectEvent)
-{
-    if (FieldEffectActiveListContains(FLDEFF_FIELD_MOVE_SHOW_MON))
-    {
-        return FALSE;
-    }
-    task->tState++;
-    return TRUE;
 }
 
 static bool8 WaterfallFieldEffect_RideUp(struct Task *task, struct ObjectEvent *objectEvent)
@@ -1885,7 +1868,7 @@ static bool8 WaterfallFieldEffect_ContinueRideOrEnd(struct Task *task, struct Ob
     if (MetatileBehavior_IsWaterfall(objectEvent->currentMetatileBehavior))
     {
         // Still ascending waterfall, back to WaterfallFieldEffect_RideUp
-        task->tState = 3;
+        task->tState = 2;
         return TRUE;
     }
 
@@ -1923,25 +1906,13 @@ static bool8 DiveFieldEffect_Init(struct Task *task)
 
 static bool8 DiveFieldEffect_ShowMon(struct Task *task)
 {
-    LockPlayerFieldControls();
-    gFieldEffectArguments[0] = task->data[15];
-    FieldEffectStart(FLDEFF_FIELD_MOVE_SHOW_MON_INIT);
-    task->data[0]++;
-    return FALSE;
-}
-
-static bool8 DiveFieldEffect_TryWarp(struct Task *task)
-{
     struct MapPosition mapPosition;
-    PlayerGetDestCoords(&mapPosition.x, &mapPosition.y);
 
-    // Wait for show mon first
-    if (!FieldEffectActiveListContains(FLDEFF_FIELD_MOVE_SHOW_MON))
-    {
-        TryDoDiveWarp(&mapPosition, gObjectEvents[gPlayerAvatar.objectEventId].currentMetatileBehavior);
-        DestroyTask(FindTaskIdByFunc(Task_UseDive));
-        FieldEffectActiveListRemove(FLDEFF_USE_DIVE);
-    }
+    LockPlayerFieldControls();
+    PlayerGetDestCoords(&mapPosition.x, &mapPosition.y);
+    TryDoDiveWarp(&mapPosition, gObjectEvents[gPlayerAvatar.objectEventId].currentMetatileBehavior);
+    DestroyTask(FindTaskIdByFunc(Task_UseDive));
+    FieldEffectActiveListRemove(FLDEFF_USE_DIVE);
     return FALSE;
 }
 
@@ -2995,7 +2966,6 @@ static void (*const sSurfFieldEffectFuncs[])(struct Task *) = {
     SurfFieldEffect_Init,
     SurfFieldEffect_FieldMovePose,
     SurfFieldEffect_ShowMon,
-    SurfFieldEffect_JumpOnSurfBlob,
     SurfFieldEffect_End,
 };
 
@@ -3033,18 +3003,6 @@ static void SurfFieldEffect_ShowMon(struct Task *task)
     objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
     if (ObjectEventCheckHeldMovementStatus(objectEvent))
     {
-        gFieldEffectArguments[0] = task->tMonId | SHOW_MON_CRY_NO_DUCKING;
-        FieldEffectStart(FLDEFF_FIELD_MOVE_SHOW_MON_INIT);
-        task->tState++;
-    }
-}
-
-static void SurfFieldEffect_JumpOnSurfBlob(struct Task *task)
-{
-    struct ObjectEvent *objectEvent;
-    if (!FieldEffectActiveListContains(FLDEFF_FIELD_MOVE_SHOW_MON))
-    {
-        objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
         ObjectEventSetGraphicsId(objectEvent, GetPlayerAvatarGraphicsIdByStateId(PLAYER_AVATAR_STATE_SURFING));
         ObjectEventClearHeldMovementIfFinished(objectEvent);
         ObjectEventSetHeldMovement(objectEvent, GetJumpSpecialMovementAction(objectEvent->movementDirection));
@@ -3170,7 +3128,6 @@ u8 FldEff_UseFly(void)
 static void (*const sFlyOutFieldEffectFuncs[])(struct Task *) = {
     FlyOutFieldEffect_FieldMovePose,
     FlyOutFieldEffect_ShowMon,
-    FlyOutFieldEffect_BirdLeaveBall,
     FlyOutFieldEffect_WaitBirdLeave,
     FlyOutFieldEffect_BirdSwoopDown,
     FlyOutFieldEffect_JumpOnBird,
@@ -3203,17 +3160,6 @@ static void FlyOutFieldEffect_ShowMon(struct Task *task)
     struct ObjectEvent *objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
     if (ObjectEventClearHeldMovementIfFinished(objectEvent))
     {
-        task->tState++;
-        gFieldEffectArguments[0] = task->tMonId;
-        FieldEffectStart(FLDEFF_FIELD_MOVE_SHOW_MON_INIT);
-    }
-}
-
-static void FlyOutFieldEffect_BirdLeaveBall(struct Task *task)
-{
-    if (!FieldEffectActiveListContains(FLDEFF_FIELD_MOVE_SHOW_MON))
-    {
-        struct ObjectEvent *objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
         if (task->tAvatarFlags & PLAYER_AVATAR_FLAG_SURFING)
         {
             SetSurfBlob_BobState(objectEvent->fieldEffectSpriteId, BOB_JUST_MON);
