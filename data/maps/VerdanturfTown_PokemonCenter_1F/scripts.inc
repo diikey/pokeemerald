@@ -16,6 +16,13 @@ VerdanturfTown_PokemonCenter_1F_EventScript_Nurse::
 	release
 	end
 
+VerdanturfTown_PokemonCenter_1F_EventScript_Stat_Nurse::
+	lock
+	faceplayer
+	call EventScript_PkmnCenterStatNurse
+	release
+	end
+
 VerdanturfTown_PokemonCenter_1F_EventScript_Gentleman::
 	msgbox VerdanturfTown_PokemonCenter_1F_Text_FaithInYourPokemon, MSGBOX_NPC
 	end

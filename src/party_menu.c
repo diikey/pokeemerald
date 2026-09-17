@@ -6276,6 +6276,16 @@ static void Task_ChoosePartyMon(u8 taskId)
     }
 }
 
+// Used as a script special for the Stat Nurse's Nature Changer
+void SetChosenMonNature(void)
+{
+    struct Pokemon *mon = &gPlayerParty[gSpecialVar_0x8004];
+    u8 increaseStat = gSpecialVar_0x8005; // 0-4 menu index from the "increase" multichoice
+    u8 decreaseStat = gSpecialVar_0x8006; // 0-4 menu index from the "decrease" multichoice
+
+    SetMonNature(mon, increaseStat * NUM_NATURE_STATS + decreaseStat);
+}
+
 void ChooseMonForMoveRelearner(void)
 {
     LockPlayerFieldControls();

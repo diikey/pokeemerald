@@ -16,6 +16,13 @@ DewfordTown_PokemonCenter_1F_EventScript_Nurse::
 	release
 	end
 
+DewfordTown_PokemonCenter_1F_EventScript_Stat_Nurse::
+	lock
+	faceplayer
+	call EventScript_PkmnCenterStatNurse
+	release
+	end
+
 DewfordTown_PokemonCenter_1F_EventScript_PokefanF::
 	msgbox DewfordTown_PokemonCenter_1F_Text_StoneCavern, MSGBOX_NPC
 	end

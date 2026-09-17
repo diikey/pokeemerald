@@ -776,6 +776,30 @@ static const struct MenuAction MultichoiceList_Exit[] =
     {gText_Exit},
 };
 
+static const struct MenuAction MultichoiceList_StatNurseService[] =
+{
+    {gText_NatureChange},
+    {gText_Exit},
+};
+
+static const struct MenuAction MultichoiceList_NatureIncreaseStat[] =
+{
+    {gText_Attack},
+    {gText_Defense},
+    {gText_Speed},
+    {gText_SpAtk},
+    {gText_SpDef},
+};
+
+static const struct MenuAction MultichoiceList_NatureDecreaseStat[] =
+{
+    {gText_Attack},
+    {gText_Defense},
+    {gText_Speed},
+    {gText_SpAtk},
+    {gText_SpDef},
+};
+
 struct MultichoiceListStruct
 {
     const struct MenuAction *list;
@@ -898,6 +922,9 @@ static const struct MultichoiceListStruct sMultichoiceLists[] =
     [MULTI_SLATEPORT_TENT_RULES]       = MULTICHOICE(MultichoiceList_SlateportTentRules),
     [MULTI_FALLARBOR_TENT_RULES]       = MULTICHOICE(MultichoiceList_FallarborTentRules),
     [MULTI_TAG_MATCH_TYPE]             = MULTICHOICE(MultichoiceList_TagMatchType),
+    [MULTI_STAT_NURSE_SERVICE]         = MULTICHOICE(MultichoiceList_StatNurseService),
+    [MULTI_NATURE_INCREASE_STAT]       = MULTICHOICE(MultichoiceList_NatureIncreaseStat),
+    [MULTI_NATURE_DECREASE_STAT]       = MULTICHOICE(MultichoiceList_NatureDecreaseStat),
 };
 
 const u8 *const gStdStrings[] =

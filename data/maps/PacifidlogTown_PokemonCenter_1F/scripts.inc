@@ -15,6 +15,13 @@ PacifidlogTown_PokemonCenter_1F_EventScript_Nurse::
 	release
 	end
 
+PacifidlogTown_PokemonCenter_1F_EventScript_Stat_Nurse::
+	lock
+	faceplayer
+	call EventScript_PkmnCenterStatNurse
+	release
+	end
+
 PacifidlogTown_PokemonCenter_1F_EventScript_Girl::
 	msgbox PacifidlogTown_PokemonCenter_1F_Text_WhatColorTrainerCard, MSGBOX_NPC
 	end
