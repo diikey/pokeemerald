@@ -536,9 +536,14 @@ gSpecials::
 	def_special ShowTrainerHillRecords, waitstate=1
 	def_special PlayerFaceTrainerAfterBattle
 	def_special ResetHealLocationFromDewford
-	def_special IsLastMonThatKnowsSurf
 	def_special CountPartyAliveNonEggMons
 	def_special TryPrepareSecondApproachingTrainer
 	def_special RemoveRecordsWindow
 	def_special CloseDeptStoreElevatorWindow
 	def_special TrySetBattleTowerLinkType
+	def_special CanUseCut
+	def_special CanUseRockSmash
+	def_special CanUseStrength
+	def_special CanUseSurf
+	def_special CanUseWaterfall
+	def_special CanUseDive

@@ -16,6 +16,7 @@
 #include "frontier_pass.h"
 #include "frontier_util.h"
 #include "gpu_regs.h"
+#include "hm_menu.h"
 #include "international_string_util.h"
 #include "item_menu.h"
 #include "link.h"
@@ -52,6 +53,7 @@ enum
 {
     MENU_ACTION_POKEDEX,
     MENU_ACTION_POKEMON,
+    MENU_ACTION_USE_HM,
     MENU_ACTION_BAG,
     MENU_ACTION_POKENAV,
     MENU_ACTION_PLAYER,
@@ -93,6 +95,7 @@ EWRAM_DATA static u8 sSaveInfoWindowId = 0;
 // Menu action callbacks
 static bool8 StartMenuPokedexCallback(void);
 static bool8 StartMenuPokemonCallback(void);
+static bool8 StartMenuUseHMCallback(void);
 static bool8 StartMenuBagCallback(void);
 static bool8 StartMenuPokeNavCallback(void);
 static bool8 StartMenuPlayerNameCallback(void);
@@ -183,6 +186,7 @@ static const struct MenuAction sStartMenuItems[] =
 {
     [MENU_ACTION_POKEDEX]         = {gText_MenuPokedex, {.u8_void = StartMenuPokedexCallback}},
     [MENU_ACTION_POKEMON]         = {gText_MenuPokemon, {.u8_void = StartMenuPokemonCallback}},
+    [MENU_ACTION_USE_HM]          = {gText_MenuUseHM,   {.u8_void = StartMenuUseHMCallback}},
     [MENU_ACTION_BAG]             = {gText_MenuBag,     {.u8_void = StartMenuBagCallback}},
     [MENU_ACTION_POKENAV]         = {gText_MenuPokenav, {.u8_void = StartMenuPokeNavCallback}},
     [MENU_ACTION_PLAYER]          = {gText_MenuPlayer,  {.u8_void = StartMenuPlayerNameCallback}},
@@ -321,6 +325,10 @@ static void BuildNormalStartMenu(void)
     if (FlagGet(FLAG_SYS_POKEMON_GET) == TRUE)
     {
         AddStartMenuAction(MENU_ACTION_POKEMON);
+    }
+    if (FlagGet(FLAG_BADGE01_GET) == TRUE)
+    {
+        AddStartMenuAction(MENU_ACTION_USE_HM);
     }
 
     AddStartMenuAction(MENU_ACTION_BAG);
@@ -675,6 +683,21 @@ static bool8 StartMenuBagCallback(void)
         RemoveExtraStartMenuWindows();
         CleanupOverworldWindowsAndTilemaps();
         SetMainCallback2(CB2_BagMenuFromStartMenu); // Display bag menu
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static bool8 StartMenuUseHMCallback(void)
+{
+    if (!gPaletteFade.active)
+    {
+        PlayRainStoppingSoundEffect();
+        RemoveExtraStartMenuWindows();
+        CleanupOverworldWindowsAndTilemaps();
+        SetMainCallback2(CB2_HMMenuFromStartMenu); // Display HM menu
 
         return TRUE;
     }

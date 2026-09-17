@@ -33,8 +33,6 @@ LilycoveCity_MoveDeletersHouse_EventScript_ChooseMonAndMoveToForget::
 	end
 
 LilycoveCity_MoveDeletersHouse_EventScript_TryForgetMove::
-	special IsLastMonThatKnowsSurf
-	goto_if_eq VAR_RESULT, TRUE, LilycoveCity_MoveDeletersHouse_EventScript_LastMonWithSurf
 	special MoveDeleterForgetMove
 	playfanfare MUS_MOVE_DELETED
 	waitfanfare

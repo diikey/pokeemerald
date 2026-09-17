@@ -248,6 +248,7 @@ extern const u8 gText_SaveFailed[];
 // menu texts
 extern const u8 gText_MenuPokedex[];
 extern const u8 gText_MenuPokemon[];
+extern const u8 gText_MenuUseHM[];
 extern const u8 gText_MenuBag[];
 extern const u8 gText_MenuPokenav[];
 extern const u8 gText_MenuPlayer[];
@@ -469,6 +470,8 @@ extern const u8 gText_OnlyPkmnForBattle[];
 extern const u8 gJPText_AreYouSureYouWantToSpinTradeMon[];
 extern const u8 gText_PauseUntilPress[];
 extern const u8 gText_CantUseUntilNewBadge[];
+extern const u8 gText_HMItemNotInBag[];
+extern const u8 gText_HMMenuNeedBadge[];
 extern const u8 gText_ReturnToHealingSpot[];
 extern const u8 gText_EscapeFromHere[];
 extern const u8 gText_PkmnCuredOfPoison[];

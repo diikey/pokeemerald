@@ -4268,3 +4268,34 @@ u8 Script_TryGainNewFanFromCounter(void)
 {
     return TryGainNewFanFromCounter(gSpecialVar_0x8004);
 }
+
+// Badge + HM item in the Bag, no party mon needs to know the move.
+void CanUseCut(void)
+{
+    gSpecialVar_Result = CanUseHMFieldMove(FIELD_MOVE_CUT);
+}
+
+void CanUseRockSmash(void)
+{
+    gSpecialVar_Result = CanUseHMFieldMove(FIELD_MOVE_ROCK_SMASH);
+}
+
+void CanUseStrength(void)
+{
+    gSpecialVar_Result = CanUseHMFieldMove(FIELD_MOVE_STRENGTH);
+}
+
+void CanUseSurf(void)
+{
+    gSpecialVar_Result = CanUseHMFieldMove(FIELD_MOVE_SURF);
+}
+
+void CanUseWaterfall(void)
+{
+    gSpecialVar_Result = CanUseHMFieldMove(FIELD_MOVE_WATERFALL);
+}
+
+void CanUseDive(void)
+{
+    gSpecialVar_Result = CanUseHMFieldMove(FIELD_MOVE_DIVE);
+}

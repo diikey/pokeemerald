@@ -21,8 +21,8 @@
 
 static void Task_DoFieldMove_Init(u8 taskId);
 static void Task_DoFieldMove_ShowMonAfterPose(u8 taskId);
-static void Task_DoFieldMove_WaitForMon(u8 taskId);
 static void Task_DoFieldMove_RunFunc(u8 taskId);
+static void DoFieldMoveShowMonRestoreGraphics(void);
 
 static void FieldCallback_RockSmash(void);
 static void FieldMove_RockSmash(void);
@@ -64,8 +64,8 @@ static void Task_DoFieldMove_Init(u8 taskId)
         if (gMapHeader.mapType == MAP_TYPE_UNDERWATER)
         {
             // Skip field move pose underwater
-            FieldEffectStart(FLDEFF_FIELD_MOVE_SHOW_MON_INIT);
-            gTasks[taskId].func = Task_DoFieldMove_WaitForMon;
+            DoFieldMoveShowMonRestoreGraphics();
+            gTasks[taskId].func = Task_DoFieldMove_RunFunc;
         }
         else
         {
@@ -81,29 +81,24 @@ static void Task_DoFieldMove_ShowMonAfterPose(u8 taskId)
 {
     if (ObjectEventCheckHeldMovementStatus(&gObjectEvents[gPlayerAvatar.objectEventId]) == TRUE)
     {
-        FieldEffectStart(FLDEFF_FIELD_MOVE_SHOW_MON_INIT);
-        gTasks[taskId].func = Task_DoFieldMove_WaitForMon;
+        DoFieldMoveShowMonRestoreGraphics();
+        gTasks[taskId].func = Task_DoFieldMove_RunFunc;
     }
 }
 
-static void Task_DoFieldMove_WaitForMon(u8 taskId)
+static void DoFieldMoveShowMonRestoreGraphics(void)
 {
-    if (!FieldEffectActiveListContains(FLDEFF_FIELD_MOVE_SHOW_MON))
-    {
-        gFieldEffectArguments[1] = GetPlayerFacingDirection();
-        if (gFieldEffectArguments[1] == DIR_SOUTH)
-            gFieldEffectArguments[2] = 0;
-        if (gFieldEffectArguments[1] == DIR_NORTH)
-            gFieldEffectArguments[2] = 1;
-        if (gFieldEffectArguments[1] == DIR_WEST)
-            gFieldEffectArguments[2] = 2;
-        if (gFieldEffectArguments[1] == DIR_EAST)
-            gFieldEffectArguments[2] = 3;
-        ObjectEventSetGraphicsId(&gObjectEvents[gPlayerAvatar.objectEventId], GetPlayerAvatarGraphicsIdByCurrentState());
-        StartSpriteAnim(&gSprites[gPlayerAvatar.spriteId], gFieldEffectArguments[2]);
-        FieldEffectActiveListRemove(FLDEFF_FIELD_MOVE_SHOW_MON);
-        gTasks[taskId].func = Task_DoFieldMove_RunFunc;
-    }
+    gFieldEffectArguments[1] = GetPlayerFacingDirection();
+    if (gFieldEffectArguments[1] == DIR_SOUTH)
+        gFieldEffectArguments[2] = 0;
+    if (gFieldEffectArguments[1] == DIR_NORTH)
+        gFieldEffectArguments[2] = 1;
+    if (gFieldEffectArguments[1] == DIR_WEST)
+        gFieldEffectArguments[2] = 2;
+    if (gFieldEffectArguments[1] == DIR_EAST)
+        gFieldEffectArguments[2] = 3;
+    ObjectEventSetGraphicsId(&gObjectEvents[gPlayerAvatar.objectEventId], GetPlayerAvatarGraphicsIdByCurrentState());
+    StartSpriteAnim(&gSprites[gPlayerAvatar.spriteId], gFieldEffectArguments[2]);
 }
 
 static void Task_DoFieldMove_RunFunc(u8 taskId)

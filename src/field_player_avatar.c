@@ -8,6 +8,7 @@
 #include "field_effect_helpers.h"
 #include "field_player_avatar.h"
 #include "fieldmap.h"
+#include "item.h"
 #include "menu.h"
 #include "metatile_behavior.h"
 #include "overworld.h"
@@ -27,6 +28,7 @@
 #include "constants/field_effects.h"
 #include "constants/items.h"
 #include "constants/moves.h"
+#include "constants/party_menu.h"
 #include "constants/songs.h"
 #include "constants/trainer_types.h"
 
@@ -1294,21 +1296,27 @@ u8 GetPlayerAvatarGenderByGraphicsId(u8 gfxId)
     }
 }
 
-bool8 PartyHasMonWithSurf(void)
-{
-    u8 i;
+// Maps FIELD_MOVE_CUT..FIELD_MOVE_WATERFALL to the HM item that unlocks it.
+// Doesn't line up with ITEM_HM01..ITEM_HM08 order (those are numbered by
+// TM/HM case slot, not by FIELD_MOVE_* index), so this has to be explicit.
+static const u16 sHMFieldMoveItems[] = {
+    [FIELD_MOVE_CUT]        = ITEM_HM01,
+    [FIELD_MOVE_FLASH]      = ITEM_HM05,
+    [FIELD_MOVE_ROCK_SMASH] = ITEM_HM06,
+    [FIELD_MOVE_STRENGTH]   = ITEM_HM04,
+    [FIELD_MOVE_SURF]       = ITEM_HM03,
+    [FIELD_MOVE_FLY]        = ITEM_HM02,
+    [FIELD_MOVE_DIVE]       = ITEM_HM08,
+    [FIELD_MOVE_WATERFALL]  = ITEM_HM07,
+};
 
-    if (!TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING))
-    {
-        for (i = 0; i < PARTY_SIZE; i++)
-        {
-            if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) == SPECIES_NONE)
-                break;
-            if (MonKnowsMove(&gPlayerParty[i], MOVE_SURF))
-                return TRUE;
-        }
-    }
-    return FALSE;
+// No party Pokemon needs to know the move; the badge and the HM item in the
+// Bag (not PC) are the only requirements. fieldMove must be FIELD_MOVE_CUT..FIELD_MOVE_WATERFALL.
+bool8 CanUseHMFieldMove(u8 fieldMove)
+{
+    if (FlagGet(FLAG_BADGE01_GET + fieldMove) != TRUE)
+        return FALSE;
+    return CheckBagHasItem(sHMFieldMoveItems[fieldMove], 1);
 }
 
 bool8 IsPlayerSurfingNorth(void)
