@@ -1,0 +1,6 @@
+#ifndef GUARD_EV_ALLOCATOR_SCREEN_H
+#define GUARD_EV_ALLOCATOR_SCREEN_H
+
+void OpenEVAllocatorScreen(void);
+
+#endif // GUARD_EV_ALLOCATOR_SCREEN_H

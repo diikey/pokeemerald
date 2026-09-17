@@ -745,7 +745,7 @@ static const TaskFunc sTextPrinterTasks[] =
 
 static const u8 sMemoNatureTextColor[] = _("{COLOR LIGHT_RED}{SHADOW GREEN}");
 static const u8 sMemoMiscTextColor[] = _("{COLOR WHITE}{SHADOW DARK_GRAY}"); // This is also affected by palettes, apparently
-static const u8 sStatsIncreasedTextColor[] = _("{COLOR RED}{SHADOW DARK_GRAY}");
+static const u8 sStatsIncreasedTextColor[] = _("{COLOR LIGHT_RED}{SHADOW GREEN}");
 static const u8 sStatsDecreasedTextColor[] = _("{COLOR BLUE}{SHADOW DARK_GRAY}");
 // Left column line order: HP, Attack, Defense. HP is never Nature-affected, so it gets no color placeholder.
 static const u8 sStatsLeftColumnLayout[] = _("{DYNAMIC 0}/{DYNAMIC 1}\n{DYNAMIC 4}{DYNAMIC 2}\n{DYNAMIC 5}{DYNAMIC 3}");
