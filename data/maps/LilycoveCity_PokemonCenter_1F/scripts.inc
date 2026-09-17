@@ -31,6 +31,13 @@ LilycoveCity_PokemonCenter_1F_EventScript_Nurse::
 	release
 	end
 
+LilycoveCity_PokemonCenter_1F_EventScript_Stat_Nurse::
+	lock
+	faceplayer
+	call EventScript_PkmnCenterStatNurse
+	release
+	end
+
 LilycoveCity_PokemonCenter_1F_EventScript_Boy::
 	msgbox LilycoveCity_PokemonCenter_1F_Text_HowManyKindsOfPokemon, MSGBOX_NPC
 	end

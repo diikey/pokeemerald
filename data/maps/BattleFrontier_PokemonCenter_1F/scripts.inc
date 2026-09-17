@@ -15,6 +15,13 @@ BattleFrontier_PokemonCenter_1F_EventScript_Nurse::
 	release
 	end
 
+BattleFrontier_PokemonCenter_1F_EventScript_Stat_Nurse::
+	lock
+	faceplayer
+	call EventScript_PkmnCenterStatNurse
+	release
+	end
+
 BattleFrontier_PokemonCenter_1F_EventScript_SchoolKid::
 	msgbox BattleFrontier_PokemonCenter_1F_Text_NeverSeenPokemon, MSGBOX_NPC
 	end

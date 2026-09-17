@@ -745,8 +745,12 @@ static const TaskFunc sTextPrinterTasks[] =
 
 static const u8 sMemoNatureTextColor[] = _("{COLOR LIGHT_RED}{SHADOW GREEN}");
 static const u8 sMemoMiscTextColor[] = _("{COLOR WHITE}{SHADOW DARK_GRAY}"); // This is also affected by palettes, apparently
-static const u8 sStatsLeftColumnLayout[] = _("{DYNAMIC 0}/{DYNAMIC 1}\n{DYNAMIC 2}\n{DYNAMIC 3}");
-static const u8 sStatsRightColumnLayout[] = _("{DYNAMIC 0}\n{DYNAMIC 1}\n{DYNAMIC 2}");
+static const u8 sStatsIncreasedTextColor[] = _("{COLOR RED}{SHADOW DARK_GRAY}");
+static const u8 sStatsDecreasedTextColor[] = _("{COLOR BLUE}{SHADOW DARK_GRAY}");
+// Left column line order: HP, Attack, Defense. HP is never Nature-affected, so it gets no color placeholder.
+static const u8 sStatsLeftColumnLayout[] = _("{DYNAMIC 0}/{DYNAMIC 1}\n{DYNAMIC 4}{DYNAMIC 2}\n{DYNAMIC 5}{DYNAMIC 3}");
+// Right column line order: Sp. Attack, Sp. Defense, Speed.
+static const u8 sStatsRightColumnLayout[] = _("{DYNAMIC 3}{DYNAMIC 0}\n{DYNAMIC 4}{DYNAMIC 1}\n{DYNAMIC 5}{DYNAMIC 2}");
 static const u8 sMovesPPLayout[] = _("{PP}{DYNAMIC 0}/{DYNAMIC 1}");
 
 #define TAG_MOVE_SELECTOR 30000
@@ -3388,12 +3392,27 @@ static void PrintRibbonCount(void)
     PrintTextOnWindow(AddWindowFromTemplateList(sPageSkillsTemplate, PSS_DATA_WINDOW_SKILLS_RIBBON_COUNT), text, x, 1, 0, 0);
 }
 
+// stat is a 0-indexed (STAT_ATK - 1)..(STAT_SPDEF - 1) value, same as increasedStat/decreasedStat.
+static const u8 *GetNatureStatColor(u8 stat, u8 increasedStat, u8 decreasedStat)
+{
+    if (increasedStat == decreasedStat)
+        return sMemoMiscTextColor; // Neutral nature - no stat is raised or lowered.
+    if (stat == increasedStat)
+        return sStatsIncreasedTextColor;
+    if (stat == decreasedStat)
+        return sStatsDecreasedTextColor;
+    return sMemoMiscTextColor;
+}
+
 static void BufferLeftColumnStats(void)
 {
     u8 *currentHPString = Alloc(8);
     u8 *maxHPString = Alloc(8);
     u8 *attackString = Alloc(8);
     u8 *defenseString = Alloc(8);
+    u8 nature = sMonSummaryScreen->summary.nature;
+    u8 increasedStat = nature / NUM_NATURE_STATS;
+    u8 decreasedStat = nature % NUM_NATURE_STATS;
 
     ConvertIntToDecimalStringN(currentHPString, sMonSummaryScreen->summary.currentHP, STR_CONV_MODE_RIGHT_ALIGN, 3);
     ConvertIntToDecimalStringN(maxHPString, sMonSummaryScreen->summary.maxHP, STR_CONV_MODE_RIGHT_ALIGN, 3);
@@ -3405,6 +3424,8 @@ static void BufferLeftColumnStats(void)
     DynamicPlaceholderTextUtil_SetPlaceholderPtr(1, maxHPString);
     DynamicPlaceholderTextUtil_SetPlaceholderPtr(2, attackString);
     DynamicPlaceholderTextUtil_SetPlaceholderPtr(3, defenseString);
+    DynamicPlaceholderTextUtil_SetPlaceholderPtr(4, GetNatureStatColor(STAT_ATK - 1, increasedStat, decreasedStat));
+    DynamicPlaceholderTextUtil_SetPlaceholderPtr(5, GetNatureStatColor(STAT_DEF - 1, increasedStat, decreasedStat));
     DynamicPlaceholderTextUtil_ExpandPlaceholders(gStringVar4, sStatsLeftColumnLayout);
 
     Free(currentHPString);
@@ -3420,6 +3441,10 @@ static void PrintLeftColumnStats(void)
 
 static void BufferRightColumnStats(void)
 {
+    u8 nature = sMonSummaryScreen->summary.nature;
+    u8 increasedStat = nature / NUM_NATURE_STATS;
+    u8 decreasedStat = nature % NUM_NATURE_STATS;
+
     ConvertIntToDecimalStringN(gStringVar1, sMonSummaryScreen->summary.spatk, STR_CONV_MODE_RIGHT_ALIGN, 3);
     ConvertIntToDecimalStringN(gStringVar2, sMonSummaryScreen->summary.spdef, STR_CONV_MODE_RIGHT_ALIGN, 3);
     ConvertIntToDecimalStringN(gStringVar3, sMonSummaryScreen->summary.speed, STR_CONV_MODE_RIGHT_ALIGN, 3);
@@ -3428,6 +3453,9 @@ static void BufferRightColumnStats(void)
     DynamicPlaceholderTextUtil_SetPlaceholderPtr(0, gStringVar1);
     DynamicPlaceholderTextUtil_SetPlaceholderPtr(1, gStringVar2);
     DynamicPlaceholderTextUtil_SetPlaceholderPtr(2, gStringVar3);
+    DynamicPlaceholderTextUtil_SetPlaceholderPtr(3, GetNatureStatColor(STAT_SPATK - 1, increasedStat, decreasedStat));
+    DynamicPlaceholderTextUtil_SetPlaceholderPtr(4, GetNatureStatColor(STAT_SPDEF - 1, increasedStat, decreasedStat));
+    DynamicPlaceholderTextUtil_SetPlaceholderPtr(5, GetNatureStatColor(STAT_SPEED - 1, increasedStat, decreasedStat));
     DynamicPlaceholderTextUtil_ExpandPlaceholders(gStringVar4, sStatsRightColumnLayout);
 }
 

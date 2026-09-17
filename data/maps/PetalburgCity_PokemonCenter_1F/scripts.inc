@@ -16,6 +16,13 @@ PetalburgCity_PokemonCenter_1F_EventScript_Nurse::
 	release
 	end
 
+PetalburgCity_PokemonCenter_1F_EventScript_Stat_Nurse::
+	lock
+	faceplayer
+	call EventScript_PkmnCenterStatNurse
+	release
+	end
+
 PetalburgCity_PokemonCenter_1F_EventScript_FatMan::
 	msgbox PetalburgCity_PokemonCenter_1F_Text_PCStorageSystem, MSGBOX_NPC
 	end

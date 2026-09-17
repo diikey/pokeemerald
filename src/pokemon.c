@@ -5495,6 +5495,74 @@ u8 GetNature(struct Pokemon *mon)
     return GetMonData(mon, MON_DATA_PERSONALITY, 0) % NUM_NATURES;
 }
 
+// Changing a mon's Nature means finding a new personality value whose
+// (personality % NUM_NATURES) hits the target nature while reproducing the
+// mon's existing ability slot, gender, and shininess. personality is also
+// the encryption key and substruct-order key for the rest of the mon's
+// data, so it cannot just be overwritten via SetMonData - see
+// docs/custom_implementations/nature_changer_implementation.md.
+void SetMonNature(struct Pokemon *mon, u8 nature)
+{
+    struct BoxPokemon *boxMon = &mon->box;
+    union PokemonSubstruct saved[4];
+    u32 otId = boxMon->otId;
+    u32 oldPersonality = boxMon->personality;
+    u32 highBits = oldPersonality & 0xFFFF0000;
+    u32 oldAbilityBit = oldPersonality & 1;
+    bool8 oldShiny = (GET_SHINY_VALUE(otId, oldPersonality) < SHINY_ODDS);
+    u32 newPersonality = oldPersonality;
+    u32 candidateLow;
+    u16 species;
+    u8 oldGender;
+    s32 i;
+
+    DecryptBoxMon(boxMon);
+
+    if (CalculateBoxMonChecksum(boxMon) != boxMon->checksum)
+    {
+        // Already corrupted going in - put it back exactly as found and bail.
+        EncryptBoxMon(boxMon);
+        return;
+    }
+
+    // Save the 4 logical substructs BY TYPE (not by physical slot) while
+    // oldPersonality is still current, so GetSubstruct resolves correctly.
+    for (i = 0; i < 4; i++)
+        saved[i] = *GetSubstruct(boxMon, oldPersonality, i);
+
+    species = saved[0].type0.species;
+    oldGender = GetGenderFromSpeciesAndPersonality(species, oldPersonality);
+
+    // Search the low 16 bits for a personality that produces the target
+    // nature while reproducing this mon's existing ability/gender/shininess.
+    for (candidateLow = 0; candidateLow < 0x10000; candidateLow++)
+    {
+        u32 candidate = highBits | candidateLow;
+
+        if (candidate % NUM_NATURES != nature)
+            continue;
+        if ((candidate & 1) != oldAbilityBit)
+            continue;
+        if (GetGenderFromSpeciesAndPersonality(species, candidate) != oldGender)
+            continue;
+        if ((GET_SHINY_VALUE(otId, candidate) < SHINY_ODDS) != oldShiny)
+            continue;
+
+        newPersonality = candidate;
+        break;
+    }
+
+    boxMon->personality = newPersonality;
+
+    // Write the saved substructs back BY TYPE, using the NEW personality's
+    // permutation to find each one's new physical slot.
+    for (i = 0; i < 4; i++)
+        *GetSubstruct(boxMon, newPersonality, i) = saved[i];
+
+    boxMon->checksum = CalculateBoxMonChecksum(boxMon);
+    EncryptBoxMon(boxMon);
+}
+
 u8 GetNatureFromPersonality(u32 personality)
 {
     return personality % NUM_NATURES;

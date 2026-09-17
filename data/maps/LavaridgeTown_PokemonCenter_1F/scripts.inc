@@ -16,6 +16,13 @@ LavaridgeTown_PokemonCenter_1F_EventScript_Nurse::
 	release
 	end
 
+LavaridgeTown_PokemonCenter_1F_EventScript_Stat_Nurse::
+	lock
+	faceplayer
+	call EventScript_PkmnCenterStatNurse
+	release
+	end
+
 LavaridgeTown_PokemonCenter_1F_EventScript_Youngster::
 	msgbox LavaridgeTown_PokemonCenter_1F_Text_HotSpringCanInvigorate, MSGBOX_NPC
 	end

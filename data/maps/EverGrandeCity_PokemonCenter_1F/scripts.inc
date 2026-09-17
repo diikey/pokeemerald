@@ -21,6 +21,13 @@ EverGrandeCity_PokemonCenter_1F_EventScript_Nurse::
 	release
 	end
 
+EverGrandeCity_PokemonCenter_1F_EventScript_Stat_Nurse::
+	lock
+	faceplayer
+	call EventScript_PkmnCenterStatNurse
+	release
+	end
+
 EverGrandeCity_PokemonCenter_1F_EventScript_Woman::
 	msgbox EverGrandeCity_PokemonCenter_1F_Text_LeagueAfterVictoryRoad, MSGBOX_NPC
 	end
