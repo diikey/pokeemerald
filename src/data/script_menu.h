@@ -779,6 +779,7 @@ static const struct MenuAction MultichoiceList_Exit[] =
 static const struct MenuAction MultichoiceList_StatNurseService[] =
 {
     {gText_NatureChange},
+    {gText_EVChange},
     {gText_Exit},
 };
 

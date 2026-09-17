@@ -517,6 +517,7 @@ extern const u8 gText_SpAtk[];
 extern const u8 gText_SpDef[];
 extern const u8 gText_Speed[];
 extern const u8 gText_NatureChange[];
+extern const u8 gText_EVChange[];
 extern const u8 gText_Dash[];
 extern const u8 gText_Plus[];
 

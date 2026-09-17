@@ -4,6 +4,7 @@ EventScript_PkmnCenterStatNurse::
 	multichoice 1, 1, MULTI_STAT_NURSE_SERVICE, FALSE
 	switch VAR_RESULT
 	case 0, EventScript_StatNurse_NatureChange
+	case 1, EventScript_StatNurse_EVChange
 	case MULTI_B_PRESSED, EventScript_StatNurse_Goodbye
 	end
 
@@ -27,6 +28,16 @@ EventScript_StatNurse_NatureChange::
 	release
 	end
 
+EventScript_StatNurse_EVChange::
+	special ChoosePartyMon
+	goto_if_eq VAR_0x8004, PARTY_NOTHING_CHOSEN, EventScript_StatNurse_Goodbye
+	special OpenEVAllocatorScreen
+	switch VAR_RESULT
+	case FALSE, EventScript_StatNurse_Goodbye
+	msgbox Text_EVChange_Done, MSGBOX_DEFAULT
+	release
+	end
+
 EventScript_StatNurse_Goodbye::
 	release
 	end
@@ -44,3 +55,7 @@ Text_NatureChange_WhichStatDown::
 Text_NatureChange_Done::
 	.string "Your POKéMON's nature has been\n"
 	.string "successfully changed!$"
+
+Text_EVChange_Done::
+	.string "We've adjusted your POKéMON's\n"
+	.string "effort values. Come again!$"

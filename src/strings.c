@@ -1582,6 +1582,7 @@ const u8 gText_Speed[] = _("SPEED");
 const u8 gText_SpAtk[] = _("SP. ATK");
 const u8 gText_SpDef[] = _("SP. DEF");
 const u8 gText_NatureChange[] = _("NATURE CHANGE");
+const u8 gText_EVChange[] = _("EV CHANGE");
 const u8 gText_Plus[] = _("{PLUS}");
 const u8 gText_Dash[] = _("-");
 const u8 gText_FromSpace[] = _("From ");
