@@ -8073,7 +8073,7 @@ static void Cmd_settypetorandomresistance(void)
 
         for (rands = 0; rands < 1000; rands++)
         {
-            while (((i = Random() % 128) > sizeof(gTypeEffectiveness) / 3));
+            while (((i = Random() % 128) >= sizeof(gTypeEffectiveness) / 3));
 
             i *= 3;
 
@@ -8099,7 +8099,7 @@ static void Cmd_settypetorandomresistance(void)
             default:
                 if (TYPE_EFFECT_ATK_TYPE(j) == gLastHitByType[gBattlerAttacker]
                  && TYPE_EFFECT_MULTIPLIER(j) <= 5
-                 && !IS_BATTLER_OF_TYPE(gBattlerAttacker, TYPE_EFFECT_DEF_TYPE(i)))
+                 && !IS_BATTLER_OF_TYPE(gBattlerAttacker, TYPE_EFFECT_DEF_TYPE(j)))
                 {
                     SET_BATTLER_TYPE(gBattlerAttacker, TYPE_EFFECT_DEF_TYPE(rands));
                     PREPARE_TYPE_BUFFER(gBattleTextBuff1, TYPE_EFFECT_DEF_TYPE(rands))
