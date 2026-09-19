@@ -115,7 +115,8 @@ enum
     SPRITE_ARR_ID_BALL,
     SPRITE_ARR_ID_STATUS,
     SPRITE_ARR_ID_TYPE, // 2 for mon types, 5 for move types(4 moves and 1 to learn), used interchangeably, because mon types and move types aren't shown on the same screen
-    SPRITE_ARR_ID_MOVE_SELECTOR1 = SPRITE_ARR_ID_TYPE + TYPE_ICON_SPRITE_COUNT, // 10 sprites that make up the selector
+    SPRITE_ARR_ID_CATEGORY = SPRITE_ARR_ID_TYPE + TYPE_ICON_SPRITE_COUNT, // 1 for the Battle Moves page's physical/special/status icon
+    SPRITE_ARR_ID_MOVE_SELECTOR1 = SPRITE_ARR_ID_CATEGORY + 1, // 10 sprites that make up the selector
     SPRITE_ARR_ID_MOVE_SELECTOR2 = SPRITE_ARR_ID_MOVE_SELECTOR1 + MOVE_SELECTOR_SPRITES_COUNT,
     SPRITE_ARR_ID_COUNT = SPRITE_ARR_ID_MOVE_SELECTOR2 + MOVE_SELECTOR_SPRITES_COUNT
 };
@@ -292,6 +293,8 @@ static void SetSpriteInvisibility(u8, bool8);
 static void HidePageSpecificSprites(void);
 static void SetTypeIcons(void);
 static void CreateMoveTypeIcons(void);
+static void CreateMoveCategoryIcon(void);
+static void SetMoveCategoryIcon(u16);
 static void SetMonTypeIcons(void);
 static void SetMoveTypeIcons(void);
 static void SetContestMoveTypeIcons(void);
@@ -757,6 +760,7 @@ static const u8 sMovesPPLayout[] = _("{PP}{DYNAMIC 0}/{DYNAMIC 1}");
 #define TAG_MON_STATUS 30001
 #define TAG_MOVE_TYPES 30002
 #define TAG_MON_MARKINGS 30003
+#define TAG_MOVE_CATEGORY_ICON 30004
 
 static const struct OamData sOamData_MoveTypes =
 {
@@ -934,6 +938,66 @@ static const u8 sMoveTypeToOamPaletteNum[NUMBER_OF_MON_TYPES + CONTEST_CATEGORIE
     [NUMBER_OF_MON_TYPES + CONTEST_CATEGORY_SMART] = 15,
     [NUMBER_OF_MON_TYPES + CONTEST_CATEGORY_TOUGH] = 13,
 };
+
+// Gen 4-style physical/special/status category icon shown on the Battle Moves page.
+// Placeholder graphics (graphics/interface/move_category_icons.png): 3 flat-colored
+// frames, one per MOVE_CATEGORY_* value, sized/laid out like a single gMoveTypes_Gfx
+// frame (32x16, 8 tiles) so it reuses the same sprite/OAM shape as the type icons.
+static const struct OamData sOamData_MoveCategoryIcon =
+{
+    .y = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
+    .mosaic = FALSE,
+    .bpp = ST_OAM_4BPP,
+    .shape = SPRITE_SHAPE(32x16),
+    .x = 0,
+    .matrixNum = 0,
+    .size = SPRITE_SIZE(32x16),
+    .tileNum = 0,
+    .priority = 1,
+    .paletteNum = 0,
+    .affineParam = 0,
+};
+static const union AnimCmd sSpriteAnim_CategoryPhysical[] = {
+    ANIMCMD_FRAME(MOVE_CATEGORY_PHYSICAL * 8, 0, FALSE, FALSE),
+    ANIMCMD_END
+};
+static const union AnimCmd sSpriteAnim_CategorySpecial[] = {
+    ANIMCMD_FRAME(MOVE_CATEGORY_SPECIAL * 8, 0, FALSE, FALSE),
+    ANIMCMD_END
+};
+static const union AnimCmd sSpriteAnim_CategoryStatus[] = {
+    ANIMCMD_FRAME(MOVE_CATEGORY_STATUS * 8, 0, FALSE, FALSE),
+    ANIMCMD_END
+};
+static const union AnimCmd *const sSpriteAnimTable_MoveCategoryIcon[] = {
+    [MOVE_CATEGORY_PHYSICAL] = sSpriteAnim_CategoryPhysical,
+    [MOVE_CATEGORY_SPECIAL] = sSpriteAnim_CategorySpecial,
+    [MOVE_CATEGORY_STATUS] = sSpriteAnim_CategoryStatus,
+};
+static const struct CompressedSpriteSheet sSpriteSheet_MoveCategoryIcon =
+{
+    .data = gMoveCategoryIcons_Gfx,
+    .size = 3 * 0x100,
+    .tag = TAG_MOVE_CATEGORY_ICON
+};
+static const struct CompressedSpritePalette sSpritePalette_MoveCategoryIcon =
+{
+    .data = gMoveCategoryIcons_Pal,
+    .tag = TAG_MOVE_CATEGORY_ICON
+};
+static const struct SpriteTemplate sSpriteTemplate_MoveCategoryIcon =
+{
+    .tileTag = TAG_MOVE_CATEGORY_ICON,
+    .paletteTag = TAG_MOVE_CATEGORY_ICON,
+    .oam = &sOamData_MoveCategoryIcon,
+    .anims = sSpriteAnimTable_MoveCategoryIcon,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy
+};
+
 static const struct OamData sOamData_MoveSelector =
 {
     .y = 0,
@@ -1252,6 +1316,7 @@ static bool8 LoadGraphics(void)
     case 16:
         ResetSpriteIds();
         CreateMoveTypeIcons();
+        CreateMoveCategoryIcon();
         sMonSummaryScreen->switchCounter = 0;
         gMain.state++;
         break;
@@ -1381,6 +1446,14 @@ static bool8 DecompressGraphics(void)
         break;
     case 12:
         LoadCompressedPalette(gMoveTypes_Pal, OBJ_PLTT_ID(13), 3 * PLTT_SIZE_4BPP);
+        sMonSummaryScreen->switchCounter++;
+        break;
+    case 13:
+        LoadCompressedSpriteSheet(&sSpriteSheet_MoveCategoryIcon);
+        sMonSummaryScreen->switchCounter++;
+        break;
+    case 14:
+        LoadCompressedSpritePalette(&sSpritePalette_MoveCategoryIcon);
         sMonSummaryScreen->switchCounter = 0;
         return TRUE;
     }
@@ -3688,6 +3761,7 @@ static void PrintMoveDetails(u16 move)
 {
     u8 windowId = AddWindowFromTemplateList(sPageMovesTemplate, PSS_DATA_WINDOW_MOVE_DESCRIPTION);
     FillWindowPixelBuffer(windowId, PIXEL_FILL(0));
+    SetMoveCategoryIcon(move);
     if (move != MOVE_NONE)
     {
         if (sMonSummaryScreen->currPageIndex == PSS_PAGE_BATTLE_MOVES)
@@ -3827,6 +3901,31 @@ static void CreateMoveTypeIcons(void)
             sMonSummaryScreen->spriteIds[i] = CreateSprite(&sSpriteTemplate_MoveTypes, 0, 0, 2);
 
         SetSpriteInvisibility(i, TRUE);
+    }
+}
+
+static void CreateMoveCategoryIcon(void)
+{
+    if (sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_CATEGORY] == SPRITE_NONE)
+        sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_CATEGORY] = CreateSprite(&sSpriteTemplate_MoveCategoryIcon, 0, 0, 2);
+
+    SetSpriteInvisibility(SPRITE_ARR_ID_CATEGORY, TRUE);
+}
+
+// Sprite x/y are the center. Placed on the POWER row, between the "POWER" label and its value.
+static void SetMoveCategoryIcon(u16 move)
+{
+    if (move == MOVE_NONE || sMonSummaryScreen->currPageIndex != PSS_PAGE_BATTLE_MOVES)
+    {
+        SetSpriteInvisibility(SPRITE_ARR_ID_CATEGORY, TRUE);
+    }
+    else
+    {
+        struct Sprite *sprite = &gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_CATEGORY]];
+        StartSpriteAnim(sprite, gBattleMoves[move].category);
+        sprite->x = 54;
+        sprite->y = 126;
+        SetSpriteInvisibility(SPRITE_ARR_ID_CATEGORY, FALSE);
     }
 }
 

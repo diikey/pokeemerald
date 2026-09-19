@@ -1636,8 +1636,8 @@ AI_CV_Counter3:
 	score +1
 AI_CV_Counter4:
 	get_last_used_bank_move AI_TARGET
-	get_move_type_from_result
-	if_not_in_bytes AI_CV_Counter_PhysicalTypeList, AI_CV_Counter_ScoreDown1
+	get_move_category_from_result
+	if_not_equal MOVE_CATEGORY_PHYSICAL, AI_CV_Counter_ScoreDown1
 	if_random_less_than 100, AI_CV_Counter_End
 	score +1
 	goto AI_CV_Counter_End
@@ -2134,8 +2134,8 @@ AI_CV_MirrorCoat3:
 	score +1
 AI_CV_MirrorCoat4:
 	get_last_used_bank_move AI_TARGET
-	get_move_type_from_result
-	if_not_in_bytes AI_CV_MirrorCoat_SpecialTypeList, AI_CV_MirrorCoat_ScoreDown1
+	get_move_category_from_result
+	if_not_equal MOVE_CATEGORY_SPECIAL, AI_CV_MirrorCoat_ScoreDown1
 	if_random_less_than 100, AI_CV_MirrorCoat_End
 	score +1
 	goto AI_CV_MirrorCoat_End
