@@ -467,7 +467,7 @@
 	.byte \battler
 	.endm
 
-	.macro nop_52
+	.macro get_move_category_from_result
 	.byte 0x52
 	.endm
 

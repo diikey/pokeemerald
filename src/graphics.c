@@ -1122,6 +1122,9 @@ const u32 gStatusPal_Icons[] = INCGFX_U32("graphics/interface/status_icons.png",
 const u32 gMoveTypes_Gfx[] = INCGFX_U32("graphics/types/move_types.4bpp", ".lz");
 const u32 gMoveTypes_Pal[] = INCGFX_U32("graphics/types/move_types.gbapal", ".lz");
 
+const u32 gMoveCategoryIcons_Gfx[] = INCGFX_U32("graphics/interface/move_category_icons.png", ".4bpp.lz");
+const u32 gMoveCategoryIcons_Pal[] = INCGFX_U32("graphics/interface/move_category_icons.png", ".gbapal.lz");
+
 const u32 gSummaryMoveSelect_Gfx[] = INCGFX_U32("graphics/summary_screen/move_select.png", ".4bpp.lz");
 const u32 gSummaryMoveSelect_Pal[] = INCGFX_U32("graphics/summary_screen/move_select.png", ".gbapal.lz");
 

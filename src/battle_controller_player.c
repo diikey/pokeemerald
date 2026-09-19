@@ -10,6 +10,8 @@
 #include "battle_tv.h"
 #include "bg.h"
 #include "data.h"
+#include "decompress.h"
+#include "graphics.h"
 #include "item.h"
 #include "item_menu.h"
 #include "link.h"
@@ -35,6 +37,8 @@
 #include "constants/songs.h"
 #include "constants/trainers.h"
 #include "constants/rgb.h"
+
+static EWRAM_DATA bool8 sMoveInfoIconsHidden = FALSE; // see SpriteCB_MoveInfoIcons
 
 static void PlayerHandleGetMonData(void);
 static void PlayerHandleSetMonData(void);
@@ -99,7 +103,6 @@ static void HandleInputChooseMove(void);
 static void MoveSelectionCreateCursorAt(u8, u8);
 static void MoveSelectionDestroyCursorAt(u8);
 static void MoveSelectionDisplayPPNumber(void);
-static void MoveSelectionDisplayPPString(void);
 static void MoveSelectionDisplayMoveType(void);
 static void MoveSelectionDisplayMoveNames(void);
 static void HandleMoveSwitching(void);
@@ -609,6 +612,7 @@ static void HandleInputChooseMove(void)
 
             MoveSelectionCreateCursorAt(gMultiUsePlayerCursor, 27);
             BattlePutTextOnWindow(gText_BattleSwitchWhich, B_WIN_SWITCH_PROMPT);
+            sMoveInfoIconsHidden = TRUE; // the prompt covers the info box
             gBattlerControllerFuncs[gActiveBattler] = HandleMoveSwitching;
         }
     }
@@ -760,7 +764,6 @@ static void HandleMoveSwitching(void)
         gBattlerControllerFuncs[gActiveBattler] = HandleInputChooseMove;
         gMoveSelectionCursor[gActiveBattler] = gMultiUsePlayerCursor;
         MoveSelectionCreateCursorAt(gMoveSelectionCursor[gActiveBattler], 0);
-        MoveSelectionDisplayPPString();
         MoveSelectionDisplayPPNumber();
         MoveSelectionDisplayMoveType();
     }
@@ -770,7 +773,6 @@ static void HandleMoveSwitching(void)
         MoveSelectionDestroyCursorAt(gMultiUsePlayerCursor);
         MoveSelectionCreateCursorAt(gMoveSelectionCursor[gActiveBattler], 0);
         gBattlerControllerFuncs[gActiveBattler] = HandleInputChooseMove;
-        MoveSelectionDisplayPPString();
         MoveSelectionDisplayPPNumber();
         MoveSelectionDisplayMoveType();
     }
@@ -1470,12 +1472,6 @@ static void MoveSelectionDisplayMoveNames(void)
     }
 }
 
-static void MoveSelectionDisplayPPString(void)
-{
-    StringCopy(gDisplayedStringBattle, gText_MoveInterfacePP);
-    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP);
-}
-
 static void MoveSelectionDisplayPPNumber(void)
 {
     u8 *txtPtr;
@@ -1493,18 +1489,268 @@ static void MoveSelectionDisplayPPNumber(void)
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP_REMAINING);
 }
 
+// The type icon and the physical/special/status category icon are shown side by side in the top
+// row of the move info box. They are sprites, so (unlike the BG0 windows) they don't scroll with
+// the move menu. SpriteCB_MoveInfoIcons hides them whenever BG0 isn't scrolled to the move menu,
+// and destroys them (freeing their tiles/palettes) once the menu has been left.
+#define TAG_MOVE_TYPE_ICON_PAL_BASE 0xC5A0 // 3 consecutive tags, one per palette in gMoveTypes_Pal
+#define TAG_MOVE_TYPE_ICON_TILES    0xC5A3
+#define TAG_MOVE_CATEGORY_ICON      0xC5A4
+
+#define MOVE_TYPE_ICON_PAL_COUNT 3
+
+// Center of each 32x16 icon: the top row of the info box (8 tiles wide), which starts at tile column 21, row 55.
+#define MOVE_TYPE_ICON_X     (21 * 8 + 16)
+#define MOVE_CATEGORY_ICON_X (MOVE_TYPE_ICON_X + 32)
+#define MOVE_ICONS_Y         ((55 * 8 - DISPLAY_HEIGHT * 2) + 8)
+
+static const struct OamData sOamData_MoveInfoIcon =
+{
+    .y = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
+    .mosaic = FALSE,
+    .bpp = ST_OAM_4BPP,
+    .shape = SPRITE_SHAPE(32x16),
+    .x = 0,
+    .matrixNum = 0,
+    .size = SPRITE_SIZE(32x16),
+    .tileNum = 0,
+    .priority = 0,
+    .paletteNum = 0,
+    .affineParam = 0,
+};
+
+#define MOVE_TYPE_ANIM(type)                               \
+static const union AnimCmd sSpriteAnim_MoveInfoType##type[] = { \
+    ANIMCMD_FRAME((type) * 8, 0, FALSE, FALSE),            \
+    ANIMCMD_END                                            \
+}
+
+MOVE_TYPE_ANIM(TYPE_NORMAL);
+MOVE_TYPE_ANIM(TYPE_FIGHTING);
+MOVE_TYPE_ANIM(TYPE_FLYING);
+MOVE_TYPE_ANIM(TYPE_POISON);
+MOVE_TYPE_ANIM(TYPE_GROUND);
+MOVE_TYPE_ANIM(TYPE_ROCK);
+MOVE_TYPE_ANIM(TYPE_BUG);
+MOVE_TYPE_ANIM(TYPE_GHOST);
+MOVE_TYPE_ANIM(TYPE_STEEL);
+MOVE_TYPE_ANIM(TYPE_MYSTERY);
+MOVE_TYPE_ANIM(TYPE_FIRE);
+MOVE_TYPE_ANIM(TYPE_WATER);
+MOVE_TYPE_ANIM(TYPE_GRASS);
+MOVE_TYPE_ANIM(TYPE_ELECTRIC);
+MOVE_TYPE_ANIM(TYPE_PSYCHIC);
+MOVE_TYPE_ANIM(TYPE_ICE);
+MOVE_TYPE_ANIM(TYPE_DRAGON);
+MOVE_TYPE_ANIM(TYPE_DARK);
+
+static const union AnimCmd *const sSpriteAnimTable_MoveInfoType[NUMBER_OF_MON_TYPES] =
+{
+    [TYPE_NORMAL] = sSpriteAnim_MoveInfoTypeTYPE_NORMAL,
+    [TYPE_FIGHTING] = sSpriteAnim_MoveInfoTypeTYPE_FIGHTING,
+    [TYPE_FLYING] = sSpriteAnim_MoveInfoTypeTYPE_FLYING,
+    [TYPE_POISON] = sSpriteAnim_MoveInfoTypeTYPE_POISON,
+    [TYPE_GROUND] = sSpriteAnim_MoveInfoTypeTYPE_GROUND,
+    [TYPE_ROCK] = sSpriteAnim_MoveInfoTypeTYPE_ROCK,
+    [TYPE_BUG] = sSpriteAnim_MoveInfoTypeTYPE_BUG,
+    [TYPE_GHOST] = sSpriteAnim_MoveInfoTypeTYPE_GHOST,
+    [TYPE_STEEL] = sSpriteAnim_MoveInfoTypeTYPE_STEEL,
+    [TYPE_MYSTERY] = sSpriteAnim_MoveInfoTypeTYPE_MYSTERY,
+    [TYPE_FIRE] = sSpriteAnim_MoveInfoTypeTYPE_FIRE,
+    [TYPE_WATER] = sSpriteAnim_MoveInfoTypeTYPE_WATER,
+    [TYPE_GRASS] = sSpriteAnim_MoveInfoTypeTYPE_GRASS,
+    [TYPE_ELECTRIC] = sSpriteAnim_MoveInfoTypeTYPE_ELECTRIC,
+    [TYPE_PSYCHIC] = sSpriteAnim_MoveInfoTypeTYPE_PSYCHIC,
+    [TYPE_ICE] = sSpriteAnim_MoveInfoTypeTYPE_ICE,
+    [TYPE_DRAGON] = sSpriteAnim_MoveInfoTypeTYPE_DRAGON,
+    [TYPE_DARK] = sSpriteAnim_MoveInfoTypeTYPE_DARK,
+};
+
+static const union AnimCmd sSpriteAnim_MoveInfoCategoryPhysical[] = {
+    ANIMCMD_FRAME(MOVE_CATEGORY_PHYSICAL * 8, 0, FALSE, FALSE),
+    ANIMCMD_END
+};
+static const union AnimCmd sSpriteAnim_MoveInfoCategorySpecial[] = {
+    ANIMCMD_FRAME(MOVE_CATEGORY_SPECIAL * 8, 0, FALSE, FALSE),
+    ANIMCMD_END
+};
+static const union AnimCmd sSpriteAnim_MoveInfoCategoryStatus[] = {
+    ANIMCMD_FRAME(MOVE_CATEGORY_STATUS * 8, 0, FALSE, FALSE),
+    ANIMCMD_END
+};
+static const union AnimCmd *const sSpriteAnimTable_MoveInfoCategory[] =
+{
+    [MOVE_CATEGORY_PHYSICAL] = sSpriteAnim_MoveInfoCategoryPhysical,
+    [MOVE_CATEGORY_SPECIAL] = sSpriteAnim_MoveInfoCategorySpecial,
+    [MOVE_CATEGORY_STATUS] = sSpriteAnim_MoveInfoCategoryStatus,
+};
+
+static const struct CompressedSpriteSheet sSpriteSheet_MoveInfoTypeIcons =
+{
+    .data = gMoveTypes_Gfx,
+    .size = NUMBER_OF_MON_TYPES * 0x100,
+    .tag = TAG_MOVE_TYPE_ICON_TILES
+};
+static const struct CompressedSpriteSheet sSpriteSheet_MoveInfoCategoryIcons =
+{
+    .data = gMoveCategoryIcons_Gfx,
+    .size = 3 * 0x100,
+    .tag = TAG_MOVE_CATEGORY_ICON
+};
+static const struct CompressedSpritePalette sSpritePalette_MoveInfoCategoryIcons =
+{
+    .data = gMoveCategoryIcons_Pal,
+    .tag = TAG_MOVE_CATEGORY_ICON
+};
+
+static void SpriteCB_MoveInfoIcons(struct Sprite *sprite);
+
+static const struct SpriteTemplate sSpriteTemplate_MoveInfoTypeIcon =
+{
+    .tileTag = TAG_MOVE_TYPE_ICON_TILES,
+    .paletteTag = TAG_NONE, // palette is picked per type in MoveSelectionDisplayMoveType
+    .oam = &sOamData_MoveInfoIcon,
+    .anims = sSpriteAnimTable_MoveInfoType,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCB_MoveInfoIcons
+};
+static const struct SpriteTemplate sSpriteTemplate_MoveInfoCategoryIcon =
+{
+    .tileTag = TAG_MOVE_CATEGORY_ICON,
+    .paletteTag = TAG_MOVE_CATEGORY_ICON,
+    .oam = &sOamData_MoveInfoIcon,
+    .anims = sSpriteAnimTable_MoveInfoCategory,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy
+};
+
+// Which of the 3 loaded palettes each type icon uses (same assignment as the summary screen).
+static const u8 sMoveTypeIconPalIndex[NUMBER_OF_MON_TYPES] =
+{
+    [TYPE_NORMAL] = 0,
+    [TYPE_FIGHTING] = 0,
+    [TYPE_FLYING] = 1,
+    [TYPE_POISON] = 1,
+    [TYPE_GROUND] = 0,
+    [TYPE_ROCK] = 0,
+    [TYPE_BUG] = 2,
+    [TYPE_GHOST] = 1,
+    [TYPE_STEEL] = 0,
+    [TYPE_MYSTERY] = 2,
+    [TYPE_FIRE] = 0,
+    [TYPE_WATER] = 1,
+    [TYPE_GRASS] = 2,
+    [TYPE_ELECTRIC] = 0,
+    [TYPE_PSYCHIC] = 1,
+    [TYPE_ICE] = 1,
+    [TYPE_DRAGON] = 2,
+    [TYPE_DARK] = 0,
+};
+
+static EWRAM_DATA u8 sMoveInfoTypeIconSpriteId = 0; // The category icon's id is in its data[1]
+
+// The id can be stale (from a previous battle, or after the callback destroyed the icons),
+// so check that the sprite is still ours.
+static bool32 MoveInfoIconsExist(void)
+{
+    return gSprites[sMoveInfoTypeIconSpriteId].inUse
+        && gSprites[sMoveInfoTypeIconSpriteId].callback == SpriteCB_MoveInfoIcons;
+}
+
+static void DestroyMoveInfoIcons(void)
+{
+    u32 i;
+
+    DestroySprite(&gSprites[gSprites[sMoveInfoTypeIconSpriteId].data[1]]);
+    DestroySprite(&gSprites[sMoveInfoTypeIconSpriteId]);
+    FreeSpriteTilesByTag(TAG_MOVE_TYPE_ICON_TILES);
+    FreeSpriteTilesByTag(TAG_MOVE_CATEGORY_ICON);
+    for (i = 0; i < MOVE_TYPE_ICON_PAL_COUNT; i++)
+        FreeSpritePaletteByTag(TAG_MOVE_TYPE_ICON_PAL_BASE + i);
+    FreeSpritePaletteByTag(TAG_MOVE_CATEGORY_ICON);
+}
+
+// data[0]: 0 = waiting for the move menu to scroll into view, 1 = menu has been shown
+// data[1]: sprite id of the category icon
+static void SpriteCB_MoveInfoIcons(struct Sprite *sprite)
+{
+    bool32 menuShown = (gBattle_BG0_Y == DISPLAY_HEIGHT * 2);
+
+    if (sprite->data[0] == 0)
+    {
+        if (menuShown)
+            sprite->data[0] = 1;
+    }
+    else if (!menuShown)
+    {
+        DestroyMoveInfoIcons();
+        return;
+    }
+
+    sprite->invisible = !menuShown || sMoveInfoIconsHidden;
+    gSprites[sprite->data[1]].invisible = sprite->invisible;
+}
+
+static bool32 CreateMoveInfoIcons(void)
+{
+    u32 i;
+    u8 categorySpriteId;
+
+    // Type icons use 3 palettes packed into a single compressed file, so load them one at a time
+    LZDecompressWram(gMoveTypes_Pal, gDecompressionBuffer);
+    for (i = 0; i < MOVE_TYPE_ICON_PAL_COUNT; i++)
+    {
+        u8 palIndex = AllocSpritePalette(TAG_MOVE_TYPE_ICON_PAL_BASE + i);
+
+        if (palIndex == 0xFF)
+            break;
+        LoadPalette(&((u16 *)gDecompressionBuffer)[i * 16], OBJ_PLTT_ID(palIndex), PLTT_SIZE_4BPP);
+    }
+    if (i < MOVE_TYPE_ICON_PAL_COUNT)
+    {
+        while (i-- != 0)
+            FreeSpritePaletteByTag(TAG_MOVE_TYPE_ICON_PAL_BASE + i);
+        return FALSE;
+    }
+
+    LoadCompressedSpriteSheet(&sSpriteSheet_MoveInfoTypeIcons);
+    LoadCompressedSpriteSheet(&sSpriteSheet_MoveInfoCategoryIcons);
+    LoadCompressedSpritePalette(&sSpritePalette_MoveInfoCategoryIcons);
+
+    sMoveInfoTypeIconSpriteId = CreateSprite(&sSpriteTemplate_MoveInfoTypeIcon, MOVE_TYPE_ICON_X, MOVE_ICONS_Y, 0);
+    categorySpriteId = CreateSprite(&sSpriteTemplate_MoveInfoCategoryIcon, MOVE_CATEGORY_ICON_X, MOVE_ICONS_Y, 0);
+    gSprites[sMoveInfoTypeIconSpriteId].data[0] = 0;
+    gSprites[sMoveInfoTypeIconSpriteId].data[1] = categorySpriteId;
+    gSprites[sMoveInfoTypeIconSpriteId].invisible = TRUE;
+    gSprites[categorySpriteId].invisible = TRUE;
+    return TRUE;
+}
+
 static void MoveSelectionDisplayMoveType(void)
 {
-    u8 *txtPtr;
     struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[gActiveBattler][4]);
+    u16 move = moveInfo->moves[gMoveSelectionCursor[gActiveBattler]];
+    u8 type = gBattleMoves[move].type;
+    struct Sprite *typeSprite;
+    struct Sprite *categorySprite;
 
-    txtPtr = StringCopy(gDisplayedStringBattle, gText_MoveInterfaceType);
-    *(txtPtr)++ = EXT_CTRL_CODE_BEGIN;
-    *(txtPtr)++ = EXT_CTRL_CODE_FONT;
-    *(txtPtr)++ = FONT_NORMAL;
+    // Blank backdrop behind the icon sprites, so the top row looks like the rest of the box
+    BattlePutTextOnWindow(gText_EmptyString3, B_WIN_MOVE_TYPE);
 
-    StringCopy(txtPtr, gTypeNames[gBattleMoves[moveInfo->moves[gMoveSelectionCursor[gActiveBattler]]].type]);
-    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_TYPE);
+    if (!MoveInfoIconsExist() && !CreateMoveInfoIcons())
+        return;
+
+    typeSprite = &gSprites[sMoveInfoTypeIconSpriteId];
+    categorySprite = &gSprites[typeSprite->data[1]];
+
+    StartSpriteAnim(typeSprite, type);
+    typeSprite->oam.paletteNum = IndexOfSpritePaletteTag(TAG_MOVE_TYPE_ICON_PAL_BASE + sMoveTypeIconPalIndex[type]);
+    StartSpriteAnim(categorySprite, gBattleMoves[move].category);
+    sMoveInfoIconsHidden = FALSE;
 }
 
 static void MoveSelectionCreateCursorAt(u8 cursorPosition, u8 baseTileNum)
@@ -2645,7 +2891,6 @@ void InitMoveSelectionsVarsAndStrings(void)
     MoveSelectionDisplayMoveNames();
     gMultiUsePlayerCursor = 0xFF;
     MoveSelectionCreateCursorAt(gMoveSelectionCursor[gActiveBattler], 0);
-    MoveSelectionDisplayPPString();
     MoveSelectionDisplayPPNumber();
     MoveSelectionDisplayMoveType();
 }

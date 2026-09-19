@@ -227,6 +227,12 @@ enum BattlerId
 #define MOVE_RESULT_FOE_HUNG_ON        (1 << 7)
 #define MOVE_RESULT_NO_EFFECT          (MOVE_RESULT_MISSED | MOVE_RESULT_DOESNT_AFFECT_FOE | MOVE_RESULT_FAILED)
 
+// Move categories (mirrors the values in include/pokemon.h's MOVE_CATEGORY_* -
+// duplicated here, constants-only, so battle_ai_scripts.s can reference them).
+#define MOVE_CATEGORY_PHYSICAL 0
+#define MOVE_CATEGORY_SPECIAL  1
+#define MOVE_CATEGORY_STATUS   2
+
 // Battle weather flags.
 // These select from gBattleWeather, which is a u16.
 #define B_WEATHER_RAIN_TEMPORARY      (1 << 0)
