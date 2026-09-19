@@ -1545,6 +1545,7 @@ MOVE_TYPE_ANIM(TYPE_PSYCHIC);
 MOVE_TYPE_ANIM(TYPE_ICE);
 MOVE_TYPE_ANIM(TYPE_DRAGON);
 MOVE_TYPE_ANIM(TYPE_DARK);
+MOVE_TYPE_ANIM(TYPE_FAIRY);
 
 static const union AnimCmd *const sSpriteAnimTable_MoveInfoType[NUMBER_OF_MON_TYPES] =
 {
@@ -1566,6 +1567,7 @@ static const union AnimCmd *const sSpriteAnimTable_MoveInfoType[NUMBER_OF_MON_TY
     [TYPE_ICE] = sSpriteAnim_MoveInfoTypeTYPE_ICE,
     [TYPE_DRAGON] = sSpriteAnim_MoveInfoTypeTYPE_DRAGON,
     [TYPE_DARK] = sSpriteAnim_MoveInfoTypeTYPE_DARK,
+    [TYPE_FAIRY] = sSpriteAnim_MoveInfoTypeTYPE_FAIRY,
 };
 
 static const union AnimCmd sSpriteAnim_MoveInfoCategoryPhysical[] = {
@@ -1649,6 +1651,7 @@ static const u8 sMoveTypeIconPalIndex[NUMBER_OF_MON_TYPES] =
     [TYPE_ICE] = 1,
     [TYPE_DRAGON] = 2,
     [TYPE_DARK] = 0,
+    [TYPE_FAIRY] = 1,
 };
 
 static EWRAM_DATA u8 sMoveInfoTypeIconSpriteId = 0; // The category icon's id is in its data[1]

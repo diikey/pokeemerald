@@ -3642,6 +3642,8 @@ extern const u32 gItemIcon_KingsRock[];
 extern const u32 gItemIconPalette_KingsRock[];
 extern const u32 gItemIcon_SilverPowder[];
 extern const u32 gItemIconPalette_SilverPowder[];
+extern const u32 gItemIcon_FairyFeather[];
+extern const u32 gItemIconPalette_FairyFeather[];
 extern const u32 gItemIcon_AmuletCoin[];
 extern const u32 gItemIconPalette_AmuletCoin[];
 extern const u32 gItemIcon_CleanseTag[];

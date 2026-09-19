@@ -763,6 +763,11 @@ static const u8 sSilverPowderDesc[] = _(
     "raises the power of\n"
     "BUG-type moves.");
 
+static const u8 sFairyFeatherDesc[] = _(
+    "A hold item that\n"
+    "raises the power of\n"
+    "FAIRY-type moves.");
+
 static const u8 sAmuletCoinDesc[] = _(
     "Doubles money in\n"
     "battle if the\n"

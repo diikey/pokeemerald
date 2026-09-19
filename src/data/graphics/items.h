@@ -419,6 +419,8 @@ const u32 gItemIconPalette_KingsRock[] = INCGFX_U32("graphics/items/icon_palette
 
 const u32 gItemIcon_SilverPowder[] = INCGFX_U32("graphics/items/icons/silver_powder.png", ".4bpp.lz");
 const u32 gItemIconPalette_SilverPowder[] = INCGFX_U32("graphics/items/icon_palettes/silver_powder.pal", ".gbapal.lz");
+const u32 gItemIcon_FairyFeather[] = INCGFX_U32("graphics/items/icons/fairy_feather.png", ".4bpp.lz");
+const u32 gItemIconPalette_FairyFeather[] = INCGFX_U32("graphics/items/icon_palettes/fairy_feather.pal", ".gbapal.lz");
 
 const u32 gItemIcon_AmuletCoin[] = INCGFX_U32("graphics/items/icons/amulet_coin.png", ".4bpp.lz");
 const u32 gItemIconPalette_AmuletCoin[] = INCGFX_U32("graphics/items/icon_palettes/amulet_coin.pal", ".gbapal.lz");
