@@ -2406,6 +2406,8 @@ void SetMoveEffect(bool8 primary, u8 certain)
                     break;
                 }
             }
+            if (IS_BATTLER_OF_TYPE(gEffectBattler, TYPE_ELECTRIC))
+                break;
             if (gBattleMons[gEffectBattler].status1)
                 break;
 
@@ -8886,9 +8888,10 @@ static void Cmd_hiddenpowercalc(void)
 
     gDynamicBasePower = (40 * powerBits) / 63 + 30;
 
-    // Subtract 3 instead of 1 below because 2 types are excluded (TYPE_NORMAL and TYPE_MYSTERY)
+    // Subtract 4 instead of 1 below because 3 types are excluded (TYPE_NORMAL, TYPE_MYSTERY and TYPE_FAIRY)
     // The final + 1 skips past Normal, and the following conditional skips TYPE_MYSTERY
-    gBattleStruct->dynamicMoveType = ((NUMBER_OF_MON_TYPES - 3) * typeBits) / 63 + 1;
+    // TYPE_FAIRY is skipped naturally, as it is the last type and falls outside the range
+    gBattleStruct->dynamicMoveType = ((NUMBER_OF_MON_TYPES - 4) * typeBits) / 63 + 1;
     if (gBattleStruct->dynamicMoveType >= TYPE_MYSTERY)
         gBattleStruct->dynamicMoveType++;
     gBattleStruct->dynamicMoveType |= F_DYNAMIC_TYPE_IGNORE_PHYSICALITY | F_DYNAMIC_TYPE_SET;

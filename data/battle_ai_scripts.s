@@ -400,6 +400,10 @@ AI_CBM_Paralyze:
 	if_equal ABILITY_LIMBER, Score_Minus10
 	if_status AI_TARGET, STATUS1_ANY, Score_Minus10
 	if_side_affecting AI_TARGET, SIDE_STATUS_SAFEGUARD, Score_Minus10
+	get_target_type1
+	if_equal TYPE_ELECTRIC, Score_Minus10
+	get_target_type2
+	if_equal TYPE_ELECTRIC, Score_Minus10
 	end
 
 AI_CBM_Substitute:
@@ -1181,6 +1185,7 @@ AI_CV_SpAtkDown_SpecialTypeList:
 	.byte TYPE_ICE
 	.byte TYPE_DRAGON
 	.byte TYPE_DARK
+	.byte TYPE_FAIRY
 	.byte -1
 
 AI_CV_SpDefDown:
@@ -1391,6 +1396,7 @@ AI_CV_LightScreen_SpecialTypeList:
 	.byte TYPE_ICE
 	.byte TYPE_DRAGON
 	.byte TYPE_DARK
+	.byte TYPE_FAIRY
 	.byte -1
 
 AI_CV_Rest:
@@ -2179,6 +2185,7 @@ AI_CV_MirrorCoat_SpecialTypeList:
 	.byte TYPE_ICE
 	.byte TYPE_DRAGON
 	.byte TYPE_DARK
+	.byte TYPE_FAIRY
 	.byte -1
 
 AI_CV_ChargeUpMove:
